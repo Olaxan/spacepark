@@ -1,0 +1,10 @@
+.vscode/*
+.clangd/*
+build/*
+bin/*
+
+!build/.gitkeep
+!bin/.gitkeep
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json

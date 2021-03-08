@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/fredr/source/spacepark/bin",
+  "command": "/usr/bin/c++   -Wall -Wextra -std=gnu++17 -o CMakeFiles/spacepark.dir/main.cc.o -c /home/fredr/source/spacepark/main.cc",
+  "file": "/home/fredr/source/spacepark/main.cc"
+}
+]

@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Generate project",
+            "command": "cmake -S ../ -B ../build",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/bin"
+            },
+            "group": "none",
+        },
+        {
+            "label": "Build project",
+            "command": "cmake --build ../build --target trayracer",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/bin"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

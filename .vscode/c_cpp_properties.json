@@ -1,0 +1,23 @@
+{
+    "env": {
+      "defaultIncludePath": ["${workspaceFolder}"]
+    },
+    "configurations": [
+      {
+        "name": "Mac",
+        "intelliSenseMode": "clang-x64",
+        "includePath": [
+            "${defaultIncludePath}",
+            "${workspaceFolder}/exts/glew/include",
+            "${workspaceFolder}/exts/glfw/include"
+        ],
+        "cppStandard": "c++17",
+        "browse": {
+          "path": ["${workspaceFolder}"],
+          "limitSymbolsToIncludedHeaders": true,
+          "databaseFilename": ""
+        }
+      }
+    ],
+    "version": 4
+  }
