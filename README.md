@@ -22,7 +22,12 @@ Build project files with CMake and compile on GCC 8.2+
 (required for std::filesystem)
 
 The project should include all external dependencies, 
-but if you have problems with missing libraries, install (sudo apt-get install ...):
+but if you have problems with missing libraries, install (with your favourite package manager):
 * libconfig 
 
-VSCode requires the C/C++ extension to be able to use the debugger.
+## Dependencies
+
+* sqlite3 
+	https://www.sqlite.org/index.html
+* libconfig
+	https://hyperrealm.github.io/libconfig/
