@@ -10,6 +10,9 @@
 #include <sqlite3.h>
 #include <libconfig.h++>
 
+// Relative
+#include "server.h"
+
 namespace fs = std::filesystem;
 using namespace libconfig;
 
@@ -111,27 +114,6 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	// We have a config - prepare to open DB
-	sqlite3 *db;
-
-	if (!fs::exists(db_path))
-	{
-		fprintf(stderr, 
-				"The database file could not be located.\n"
-				"DB Path: %s\n\n"
-				"A new database will be opened in this location.\n",
-				db_path.c_str());
-	}
-
-	if (sqlite3_open(db_path.c_str(), &db))
-	{
-		fprintf(stderr, "Failed to open database: %s\n", sqlite3_errmsg(db));
-		sqlite3_close(db);
-
-		return EXIT_FAILURE;
-	}
-
-	fprintf(stdout, "SPACEPARK server running...\n");
-	sqlite3_close(db);
+	parking_server server(cfg, db_path);
 	return EXIT_SUCCESS;
 } 

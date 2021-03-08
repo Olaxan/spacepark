@@ -18,7 +18,7 @@ ENDIF()
 
 ADD_SUBDIRECTORY(exts)
 
-SET(files main.cc)
+SET(files main.cc server.h server.cc)
 
 SOURCE_GROUP("spacepark" FILES ${files})
 
