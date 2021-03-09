@@ -18,16 +18,17 @@ ENDIF()
 
 ADD_SUBDIRECTORY(exts)
 
-SET(files main.cc server.h server.cc)
+SET(server_files server.cc parksrv.h parksrv.cc)
+SOURCE_GROUP("spacepark_server" FILES ${server_files})
 
-SOURCE_GROUP("spacepark" FILES ${files})
+SET(config_files config.cc)
+SOURCE_GROUP("spacepark_config" FILES ${config_files})
 
-ADD_EXECUTABLE(spacepark ${files})
+ADD_EXECUTABLE(spacepark-server ${server_files})
+ADD_EXECUTABLE(spacepark-config ${config_files})
 
-TARGET_LINK_LIBRARIES(spacepark PUBLIC exts)
-
-#FIND_PACKAGE(libconfig++ REQUIRED)
-#TARGET_LINK_LIBRARIES(spacepark config++)
+TARGET_LINK_LIBRARIES(spacepark-server PUBLIC exts)
+TARGET_LINK_LIBRARIES(spacepark-config PUBLIC exts)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(CMAKE_CXX_FLAGS "-Wall -Wextra")
