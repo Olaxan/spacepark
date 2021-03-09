@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	sqlite3* db;
 
 	fs::path config_path = fs::current_path().append("config.cfg");
-	fs::path db_path;
+	fs::path db_path = fs::current_path().append("park.db");
 	
 	int c;
 	bool no_input = true;
