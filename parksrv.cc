@@ -17,7 +17,9 @@ parking_server::~parking_server()
 
 void parking_server::handle_accept(std::shared_ptr<parking_session> session, const asio::error_code& err)
 {
-	if (!err)
+	if (err)
+		fprintf(stderr, "Failed to initiate acceptor - %s", err.message().c_str());
+	else
 		session->begin();
 
 	start_accept();
@@ -38,7 +40,15 @@ void parking_server::start_accept()
 
 void parking_server::open()
 {
-	fprintf(stdout, "Server is running on port %i...\n", _acceptor.local_endpoint().port());
-	start_accept();
+	try
+	{
+		_ios.run();
+		start_accept();
+		fprintf(stdout, "Server is running on port %i...\n", _acceptor.local_endpoint().port());
+	}
+	catch (std::exception& e)
+	{
+		fprintf(stderr, "Failed to start server - %s", e.what());
+	}
 }
 

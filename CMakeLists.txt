@@ -25,7 +25,8 @@ SET(server_files
 	db.h 
 	db.cc 
 	session.h 
-	session.cc)
+	session.cc
+	protocol.h)
 
 SET(config_files 
 	config.cc 

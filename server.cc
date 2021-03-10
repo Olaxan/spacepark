@@ -93,8 +93,9 @@ int main(int argc, char* argv[])
 			}
 			catch (const SettingNotFoundException &nfex)
 			{
-				// We could probably fail here
-				db_path = fs::current_path().append("park.db");
+				fprintf(stderr, "No database path was specified");
+
+				return EXIT_FAILURE;
 			}
 		}
 

@@ -23,5 +23,10 @@
   "directory": "/home/fredr/source/spacepark/bin",
   "command": "/usr/bin/c++ -DASIO_STANDALONE -I/home/fredr/source/spacepark/exts/sqlite -I/home/fredr/source/spacepark/exts/libconfig/lib -I/home/fredr/source/spacepark/exts/asio/include -Wall -Wextra -std=gnu++17 -o CMakeFiles/spacepark-server.dir/db.cc.o -c /home/fredr/source/spacepark/db.cc",
   "file": "/home/fredr/source/spacepark/db.cc"
+},
+{
+  "directory": "/home/fredr/source/spacepark/bin",
+  "command": "/usr/bin/c++ -DASIO_STANDALONE -I/home/fredr/source/spacepark/exts/sqlite -I/home/fredr/source/spacepark/exts/libconfig/lib -I/home/fredr/source/spacepark/exts/asio/include -Wall -Wextra -std=gnu++17 -o CMakeFiles/spacepark-server.dir/session.cc.o -c /home/fredr/source/spacepark/session.cc",
+  "file": "/home/fredr/source/spacepark/session.cc"
 }
 ]
