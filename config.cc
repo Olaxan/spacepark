@@ -35,39 +35,81 @@ void create_default_config(fs::path& stream)
 	cfg.writeFile(stream.c_str());
 }
 
+static int callback(void*, int argc, char** argv, char** azColName)
+{
+	for (int i = 0; i < argc; i++)
+		fprintf(stdout, "%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+
+	fprintf(stdout, "\n");
+	return EXIT_SUCCESS;
+}
+
+int set_pragma(sqlite3*& db, char*& err, const char* pragma, const char* value)
+{
+	std::ostringstream ss;
+	ss << "PRAGMA " << pragma << " = " << value << ";";
+
+	return sqlite3_exec(db, ss.str().c_str(), nullptr, nullptr, &err);
+}
+
+int init_terminals(sqlite3*& db, char*& err)
+{
+	return sqlite3_exec(db,
+			"CREATE TABLE IF NOT EXISTS 'terminals' ("
+			"terminal_id INTEGER PRIMARY KEY,"
+			"name TEXT UNIQUE);",
+			nullptr,
+			nullptr,
+			&err);
+}
+
 int init_pads(sqlite3*& db, char*& err)
 {
 	// Of course this shouldn't be hardcoded
 	// But I have to draw the line somewhere
-	sqlite3_exec(db, 
+	return sqlite3_exec(db, 
 			"CREATE TABLE IF NOT EXISTS 'pads' ("
-			"floor INTEGER NOT NULL,"
-			"number INTEGER NOT NULL,"
+			"pad_id INTEGER PRIMARY KEY,"
+			"terminal_id INTEGER NOT NULL,"
 			"max_weight REAL NOT NULL,"
-			"PRIMARY KEY (floor, number));", 
+			"FOREIGN KEY (terminal_id) REFERENCES 'terminals'"
+			"ON DELETE CASCADE ON UPDATE CASCADE);",
 			nullptr, 
 			nullptr,
 			&err);
-
-	return (err == nullptr) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int init_ships(sqlite3*& db, char*& err)
 {
-	sqlite3_exec(db,
+	return sqlite3_exec(db,
 			"CREATE TABLE IF NOT EXISTS 'ships' ("
-			"ship_id INTEGER PRIMARY KEY NOT NULL,"
+			"ship_id INTEGER PRIMARY KEY,"
 			"license TEXT NOT NULL,"
 			"manufacturer TEXT,"
 			"weight REAL NOT NULL,"
-			"pad INTEGER NOT NULL,"
-			"FOREIGN KEY (pad) REFERENCES 'pads'"
+			"pad_id INTEGER UNIQUE NOT NULL,"
+			"FOREIGN KEY (pad_id) REFERENCES 'pads'"
 			"ON DELETE CASCADE ON UPDATE CASCADE);",
 			nullptr,
 			nullptr,
 			&err);
+}
 
-	return (err == nullptr) ? EXIT_SUCCESS : EXIT_FAILURE;
+int add_terminal(sqlite3*& db, char*& err, char*& name)
+{
+	std::ostringstream ss;
+	ss << "INSERT INTO terminals (name) VALUES ('" << name << "');";
+
+	return sqlite3_exec(db, ss.str().c_str(), callback, nullptr, &err);
+}
+
+int add_pad(sqlite3*& db, char*& err, int terminal_id, float max_weight)
+{
+	std::ostringstream ss;
+	ss << "INSERT INTO pads (terminal_id, max_weight)"
+		"VALUES (" << terminal_id << ", " << max_weight << ");";
+
+	return sqlite3_exec(db, ss.str().c_str(), callback, nullptr, &err);
 }
 
 int main(int argc, char* argv[])
@@ -120,7 +162,15 @@ int main(int argc, char* argv[])
 		sqlite3_close(db);
 		return EXIT_FAILURE;
 	}
-	
+
+	char* err;
+
+	if (set_pragma(db, err, "foreign_keys", "ON"))
+	{
+		fprintf(stderr, "Failed to enable foreign keys - %s\n", err);
+		sqlite3_free(err);
+	}
+
 	for (int index = optind; index < argc; index++)
 	{
 		if (strcmp(argv[index], "default") == 0)
@@ -130,17 +180,22 @@ int main(int argc, char* argv[])
 		}
 		else if (strcmp(argv[index], "init") == 0)
 		{
-			char* err;
 			int errc = 0;
+			if (init_terminals(db, err))
+			{
+				fprintf(stderr, "Faied to init terminals table - %s\n", err);
+				sqlite3_free(err);
+				errc++;
+			}
 			if (init_pads(db, err))
 			{
-				fprintf(stderr, "Failed to init pads table: %s\n", err);
+				fprintf(stderr, "Failed to init pads table - %s\n", err);
 				sqlite3_free(err);
 				errc++;
 			}
 			if (init_ships(db, err))
 			{
-				fprintf(stderr, "Failed to init ships table: %s\n", err);
+				fprintf(stderr, "Failed to init ships table - %s\n", err);
 				sqlite3_free(err);
 				errc++;
 			}
@@ -148,9 +203,47 @@ int main(int argc, char* argv[])
 			fprintf(stdout, (errc == 0) ? 
 					"Database initialized successfully!\n" : "%i error(s) occurred.\n", errc);
 		}
-		else if (strcmp(argv[index], "delete") == 0)
+		else if (strcmp(argv[index], "add") == 0)
 		{
-			fprintf(stdout, "Deleting database...\n");
+			if (argc <= index + 1)
+			{
+				// print add usage instructions
+				break;
+			}
+
+			index++;
+
+			if (strcmp(argv[index], "terminal") == 0)
+			{
+				if (argc <= index + 1)
+				{
+					// print add terminal usage instructions
+					break;
+				}
+				
+				if (add_terminal(db, err, argv[++index]))
+				{
+					fprintf(stderr, "Failed to add terminal - %s\n", err);
+					sqlite3_free(err);
+				}
+			}
+			else if (strcmp(argv[index], "pad") == 0)
+			{
+				if (argc <= index + 2)
+				{
+					// print add terminal usage instructions
+					break;
+				}
+
+				int terminal_id = atoi(argv[++index]);
+				float max_weight = atof(argv[++index]);
+
+				if (add_pad(db, err, terminal_id, max_weight))
+				{
+					fprintf(stderr, "Failed to add terminal - %s\n", err);
+					sqlite3_free(err);
+				}
+			}
 		}
 		else 
 		{
