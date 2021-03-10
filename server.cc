@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <math.h>
+#include <string.h>
 #include <ctype.h>
 
 // STL
@@ -143,13 +144,16 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	parking_server server(db, port);
+	parking_server server(db);
 
 	for (int index = optind; index < argc; index++)
 	{
 		if (strcmp(argv[index], "open") == 0)
 		{
-			server.open();
+			if (server.open(port, port + 64))
+				fprintf(stderr, "Server exited with an error.\n");
+			else
+				fprintf(stdout, "Server exited cleanly.\n");
 		}
 	}
 

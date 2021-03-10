@@ -24,8 +24,6 @@ SET(server_files
 	parksrv.cc 
 	db.h 
 	db.cc 
-	session.h 
-	session.cc
 	protocol.h)
 
 SET(config_files 
