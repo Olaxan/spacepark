@@ -18,10 +18,21 @@ ENDIF()
 
 ADD_SUBDIRECTORY(exts)
 
-SET(server_files server.cc parksrv.h parksrv.cc)
-SOURCE_GROUP("spacepark_server" FILES ${server_files})
+SET(server_files 
+	server.cc 
+	parksrv.h 
+	parksrv.cc 
+	db.h 
+	db.cc 
+	session.h 
+	session.cc)
 
-SET(config_files config.cc)
+SET(config_files 
+	config.cc 
+	db.h 
+	db.cc)
+
+SOURCE_GROUP("spacepark_server" FILES ${server_files})
 SOURCE_GROUP("spacepark_config" FILES ${config_files})
 
 ADD_EXECUTABLE(spacepark-server ${server_files})

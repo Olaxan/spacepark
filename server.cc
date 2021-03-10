@@ -36,11 +36,13 @@ int main(int argc, char* argv[])
 	fs::path config_path = fs::current_path().append("config.cfg");
 	fs::path db_path;
 	
+	int port = 0;
+	
 	int c;
 
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "hc:d:")) != -1)
+	while ((c = getopt (argc, argv, "hc:d:p:")) != -1)
 	{
 		switch (c)
 		{
@@ -53,8 +55,11 @@ int main(int argc, char* argv[])
 			case 'd':
 				db_path = optarg;
 				break;
+			case 'p':
+				port = atoi(optarg);
+				break;
 			case '?':
-				if (optopt == 'c')
+				if (optopt == 'c' || optopt == 'p')
 					fprintf (stderr, "Option '-%c' requires an argument.\n", optopt);
 				else if (isprint (optopt))
 					fprintf (stderr, "Unknown option '-%c'.\n", optopt);
@@ -92,6 +97,16 @@ int main(int argc, char* argv[])
 				db_path = fs::current_path().append("park.db");
 			}
 		}
+
+		if (port == 0)
+		{
+			try
+			{
+				port = cfg.lookup("port");
+			}
+			catch (const SettingNotFoundException &nfex)
+			{ } // Do nothing -- ASIO autoconfigures a port when given a 0
+		}
 	}
 	else
 	{
@@ -127,9 +142,16 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	parking_server server(cfg, db);
+	parking_server server(db, port);
+
+	for (int index = optind; index < argc; index++)
+	{
+		if (strcmp(argv[index], "open") == 0)
+		{
+			server.open();
+		}
+	}
 
 	sqlite3_close(db);
-
 	return EXIT_SUCCESS;
 } 

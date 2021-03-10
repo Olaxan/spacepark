@@ -8,8 +8,9 @@
 #include <filesystem>
 
 // Externals
-#include <sqlite3.h>
 #include <libconfig.h++>
+
+#include "db.h"
 
 namespace fs = std::filesystem;
 using namespace libconfig;
@@ -19,11 +20,15 @@ void print_usage()
 	printf("SPACEPARK configuration utility\n"
 			"Copyleft 2142 - Tonto Turbo AB\n\n"
 			"Use this utility to configure the main application and setup a database.\n\n"
-			"usage: \tspacepark-config [-h] [-c <path>] [-d <path>]\n"
-		       "options:\n"
-		       "\t-h:\t\tShows this help.\n"
-			   "\t-c <path>:\tSpecify the configuration path.\n"
-			   "\t-d <path>:\tSpecify the database file path.\n\n"
+			"usage: \tspacepark-config [-h] [-c <path>] [-d <path>] <command> [<args>]\n"
+		    "options:\n"
+		    "\t-h:\t\tShows this help\n"
+			"\t-c <path>:\tSpecify the configuration path\n"
+			"\t-d <path>:\tSpecify the database file path\n\n"
+			"commands:\n"
+			"default\t\tCreate a default configuration file.\n"
+			"init\t\tInitialize (or re-initialize) the database\n"
+			"add\t\tAdd an item to the database\n"
 	      );
 }
 
@@ -32,24 +37,8 @@ void create_default_config(fs::path& stream)
 	Config cfg;
 	Setting &root = cfg.getRoot();
 	root.add("db_path", Setting::TypeString) = fs::current_path().append("park.db");
+	root.add("port", Setting::TypeInt) = 5000;
 	cfg.writeFile(stream.c_str());
-}
-
-static int callback(void*, int argc, char** argv, char** azColName)
-{
-	for (int i = 0; i < argc; i++)
-		fprintf(stdout, "%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-
-	fprintf(stdout, "\n");
-	return EXIT_SUCCESS;
-}
-
-int set_pragma(sqlite3*& db, char*& err, const char* pragma, const char* value)
-{
-	std::ostringstream ss;
-	ss << "PRAGMA " << pragma << " = " << value << ";";
-
-	return sqlite3_exec(db, ss.str().c_str(), nullptr, nullptr, &err);
 }
 
 int init_terminals(sqlite3*& db, char*& err)
@@ -93,6 +82,15 @@ int init_ships(sqlite3*& db, char*& err)
 			nullptr,
 			nullptr,
 			&err);
+}
+
+static int callback(void*, int argc, char** argv, char** azColName)
+{
+	for (int i = 0; i < argc; i++)
+		fprintf(stdout, "%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+
+	fprintf(stdout, "\n");
+	return EXIT_SUCCESS;
 }
 
 int add_terminal(sqlite3*& db, char*& err, char*& name)
@@ -226,6 +224,8 @@ int main(int argc, char* argv[])
 					fprintf(stderr, "Failed to add terminal - %s\n", err);
 					sqlite3_free(err);
 				}
+				else 
+					fprintf(stdout, "Successfully added terminal!\n");
 			}
 			else if (strcmp(argv[index], "pad") == 0)
 			{
@@ -240,9 +240,11 @@ int main(int argc, char* argv[])
 
 				if (add_pad(db, err, terminal_id, max_weight))
 				{
-					fprintf(stderr, "Failed to add terminal - %s\n", err);
+					fprintf(stderr, "Failed to add pad - %s\n", err);
 					sqlite3_free(err);
 				}
+				else 
+					fprintf(stdout, "Successfully added pad!\n");
 			}
 		}
 		else 
