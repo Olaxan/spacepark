@@ -217,6 +217,7 @@ int main(int argc, char* argv[])
 			char* err;
 			int c, rc;
 
+			// As indicated by the asterisk, this is for debugging primariyl!!
 			if ((c = asprintf(&statement, "SELECT * FROM %s;", argv[++index])) > 0)
 			{
 				sqlite3_stmt* s;
@@ -227,7 +228,7 @@ int main(int argc, char* argv[])
 					for (int i = 0; i < sqlite3_column_count(s); i++)
 						fprintf(stdout, "%s\t", sqlite3_column_name(s, i));
 
-					fprintf(stdout, "\n");
+					fprintf(stdout, "\n ------------------------------------------------- \n");
 
 					// It's stupid not to use our prepared statement, I know,
 					// but this is RUSHED code!!
@@ -237,10 +238,9 @@ int main(int argc, char* argv[])
 						sqlite3_free(err);
 					}
 
-					sqlite3_finalize(s);
 				}
 
-
+				sqlite3_finalize(s);
 				free(statement);
 			}
 		}
