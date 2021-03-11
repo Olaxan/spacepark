@@ -186,6 +186,19 @@ int main(int argc, char* argv[])
 			else
 				fprintf(stderr, "Error %d occurred during docking.\n", rc);
 		}
+		else if (strcmp(argv[index], "undock") == 0)
+		{
+			if (argc <= index + 1)
+				break;
+
+			int id = atoi(argv[++index]);
+			int rc = server.undock_ship(id);
+
+			if (rc == SQLITE_OK)
+				fprintf(stdout, "Undocked successfully.\n");
+			else
+				fprintf(stderr, "Failed to undock.\n");
+		}
 	}
 
 	sqlite3_close(db);

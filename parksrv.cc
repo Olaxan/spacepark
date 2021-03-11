@@ -106,9 +106,33 @@ int parking_server::dock_ship(int id, float weight, const char* license)
 			fprintf(stderr, "SQL Error %d in dock_ship - %s\nQuery: %s\n", rc, err, statement);
 			sqlite3_free(err);
 		}
+
+		free(statement);
 	}
 
 	return rc;
+}
+
+int parking_server::undock_ship(int id)
+{
+	char* statement;
+	char* err;
+	
+	int c, rc;
+
+	if ((c = asprintf(&statement,
+					"DELETE FROM ships WHERE pad_id = %d;", id)) > 0)
+	{
+		if ((rc = sqlite3_exec(_db, statement, nullptr, nullptr, &err)) != SQLITE_OK)
+		{
+			fprintf(stderr, "SQL Error %d in undock_ship - %s\nQuery: %s\n", rc, err, statement);
+			sqlite3_free(err);
+		}
+
+		free(statement);
+	}
+
+	return (sqlite3_changes(_db) > 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 int parking_server::open(int begin, int end)

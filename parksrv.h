@@ -18,7 +18,7 @@ class parking_server
 		bool dock_is_free(int id) const;
 
 		int dock_ship(int id, float weight, const char* license);
-		int undock_ship(int id, const char* license);
+		int undock_ship(int id);
 
 		int open(int begin, int end);
 
