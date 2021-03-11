@@ -29,6 +29,15 @@ void print_usage()
 	      );
 }
 
+static int dump_callback(void*, int argc, char** argv, char**)
+{
+	for (int i = 0; i < argc; i++)
+		fprintf(stdout, "%s\t", argv[i] ? argv[i] : "NULL");
+
+	fprintf(stdout, "\n");
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char* argv[])
 {
 
@@ -198,6 +207,42 @@ int main(int argc, char* argv[])
 				fprintf(stdout, "Undocked successfully.\n");
 			else
 				fprintf(stderr, "Failed to undock.\n");
+		}
+		else if (strcmp(argv[index], "dump") == 0)
+		{
+			if (argc <= index + 1)
+				break;
+
+			char* statement;
+			char* err;
+			int c, rc;
+
+			if ((c = asprintf(&statement, "SELECT * FROM %s;", argv[++index])) > 0)
+			{
+				sqlite3_stmt* s;
+				int src = sqlite3_prepare_v2(db, statement, c, &s, nullptr);
+
+				if (src == SQLITE_OK)
+				{
+					for (int i = 0; i < sqlite3_column_count(s); i++)
+						fprintf(stdout, "%s\t", sqlite3_column_name(s, i));
+
+					fprintf(stdout, "\n");
+
+					// It's stupid not to use our prepared statement, I know,
+					// but this is RUSHED code!!
+					if ((rc = sqlite3_exec(db, statement, dump_callback, nullptr, &err)) != SQLITE_OK)
+					{
+						fprintf(stderr, "Query error %d - %s\nQuery: %s", rc, err, statement);
+						sqlite3_free(err);
+					}
+
+					sqlite3_finalize(s);
+				}
+
+
+				free(statement);
+			}
 		}
 	}
 

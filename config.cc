@@ -90,14 +90,47 @@ int init_ships(sqlite3*& db, char*& err)
 			&err);
 }
 
+int init_log(sqlite3*& db, char*& err)
+{
+	return sqlite3_exec(db, 
+			"CREATE TABLE IF NOT EXISTS 'docking_log'"
+			"\n("
+			"\n    log_id INTEGER PRIMARY KEY,"
+			"\n    pad_id INTEGER NOT NULL,"
+			"\n    license TEXT NOT NULL,"
+			"\n    event TEXT NOT NULL,"
+			"\n    date TEXT NOT NULL"
+			"\n);",
+			nullptr,
+			nullptr,
+			&err);
+}
+
 int init_triggers(sqlite3*& db, char*& err)
 {
 	return sqlite3_exec(db, 
-			"CREATE TRIGGER IF NOT EXISTS"
+			"CREATE TRIGGER IF NOT EXISTS check_before_dock"
 			"\nBEFORE INSERT ON ships"
-			"\nWHEN NEW.weight > (SELECT max_weight FROM pads WHERE pad_id = NEW.pad_id)"
+			"\nWHEN NOT EXISTS (SELECT 1 FROM pads WHERE pad_id = NEW.pad_id)"
+			"\nOR NEW.weight > (SELECT max_weight FROM pads WHERE pad_id = NEW.pad_id)"
 			"\nBEGIN"
-			"\n   SELECT RAISE(FAIL, 'Ship exceeds max weight.');" 
+			"\n   SELECT RAISE(FAIL, 'The landing pad does not exist or weight limit exceeded.');" 
+			"\nEND;"
+			"\nCREATE TRIGGER IF NOT EXISTS log_docking"
+			"\nAFTER INSERT ON ships"
+			"\nBEGIN"
+			"\n    INSERT INTO docking_log"
+			"\n        (pad_id, license, event, date)"
+			"\n    VALUES"
+			"\n        (NEW.pad_id, NEW.license, 'dock', DATETIME('NOW'));"
+			"\nEND;"
+			"\nCREATE TRIGGER IF NOT EXISTS log_undocking"
+			"\nAFTER DELETE ON ships"
+			"\nBEGIN"
+			"\n    INSERT INTO docking_log"
+			"\n        (pad_id, license, event, date)"
+			"\n    VALUES"
+			"\n        (OLD.pad_id, OLD.license, 'undock', DATETIME('NOW'));"
 			"\nEND;",
 			nullptr,
 			nullptr,
@@ -214,6 +247,12 @@ int main(int argc, char* argv[])
 			if (init_ships(db, err))
 			{
 				fprintf(stderr, "Failed to init ships table - %s\n", err);
+				sqlite3_free(err);
+				errc++;
+			}
+			if (init_log(db, err))
+			{
+				fprintf(stderr, "Failed to init log - %s\n", err);
 				sqlite3_free(err);
 				errc++;
 			}
