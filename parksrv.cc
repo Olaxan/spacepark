@@ -90,7 +90,7 @@ bool parking_server::dock_is_free(int id) const
 	return (rc == SQLITE_OK);
 }
 
-static int get_seconds_docked_callback(void* var, int argc, char** argv, char**)
+static int get_first_as_integer(void* var, int, char** argv, char**)
 {
 	return (*reinterpret_cast<int*>(var) = atoi(argv[0])) == 0;
 }
@@ -106,11 +106,14 @@ int parking_server::get_seconds_docked(int id) const
 	int rc = -1;
 
 	if ((c = asprintf(&statement, 
-					"SELECT CAST ((JulianDay('NOW') - JulianDay(date)"
-					") * 24 * 60 * 60 AS INTEGER) FROM ships WHERE pad_id = %d;", id)) > 0)
+					"SELECT CAST ("
+					"(JulianDay('NOW') - JulianDay(date)) * 24 * 60 * 60"
+					" AS INTEGER) "
+					"FROM ships "
+					"WHERE pad_id = %d;", id)) > 0)
 	{
 		if ((rc = sqlite3_exec(_db, statement, 
-						get_seconds_docked_callback, &seconds, &err)) != SQLITE_OK)
+						get_first_as_integer, &seconds, &err)) != SQLITE_OK)
 		{
 			fprintf(stderr, "SQL Error %d in get_seconds_docked - %s\nQuery: %s\n", rc, err, statement);
 			sqlite3_free(err);
@@ -120,6 +123,47 @@ int parking_server::get_seconds_docked(int id) const
 	}
 
 	return seconds;
+}
+
+int parking_server::get_fee(int id) const
+{
+	char* statement;
+	char* err;
+
+	int fee = -1;
+
+	int c;
+	int rc = -1;
+
+	if ((c = asprintf(&statement, 
+					"WITH span AS ("
+					"\n    SELECT"
+					"\n    (JulianDay('NOW') - JulianDay(date))"
+					"\n    AS days"
+					"\n    FROM ships"
+					"\n    WHERE pad_id = %d"
+					"\n    )"
+					"\nSELECT"
+					"\nCASE"
+					"\n    WHEN days > 1 THEN"
+					"\n    ROUND(days - 0.5) * cost_day"
+					"\n    ELSE"
+					"\n    ROUND(days * 24 - 0.5) * cost_hour"
+					"\n    END fee"
+					"\nFROM pads, span"
+					"\nWHERE pad_id = %d", id, id)) > 0)
+	{
+		if ((rc = sqlite3_exec(_db, statement, 
+						get_first_as_integer, &fee, &err)) != SQLITE_OK)
+		{
+			fprintf(stderr, "SQL Error %d in get_fee - %s\nQuery: %s\n", rc, err, statement);
+			sqlite3_free(err);
+		}
+
+		free(statement);
+	}
+
+	return fee;
 }
 
 int parking_server::dock_ship(int id, float weight, const char* license)

@@ -235,6 +235,16 @@ int main(int argc, char* argv[])
 			fprintf(stdout, "Ship at pad %d has been docked for %d seconds.\n",
 					id, server.get_seconds_docked(id));
 		}
+		else if (strcmp(argv[index], "fee") == 0)
+		{
+			if (argc <= index + 1)
+				break;
+
+			int id = atoi(argv[++index]);
+
+			fprintf(stdout, "Ship at pad %d has a parking fee of %d.\n",
+					id, server.get_fee(id));
+		}
 		else if (strcmp(argv[index], "dump") == 0)
 		{
 			if (argc <= index + 1)

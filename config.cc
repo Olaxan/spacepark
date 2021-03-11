@@ -64,6 +64,8 @@ int init_pads(sqlite3*& db, char*& err)
 			"\n    pad_id INTEGER PRIMARY KEY,"
 			"\n    terminal_id INTEGER NOT NULL,"
 			"\n    max_weight REAL NOT NULL,"
+			"\n    cost_hour REAL DEFAULT 15,"
+			"\n    cost_day REAL DEFAULT 50,"
 			"\n    FOREIGN KEY (terminal_id) REFERENCES 'terminals'"
 			"\n    ON DELETE CASCADE ON UPDATE CASCADE"
 			"\n);",
