@@ -13,6 +13,7 @@
 
 // Relative
 #include "parksrv.h"
+#include "db.h"
 
 namespace fs = std::filesystem;
 using namespace libconfig;
@@ -153,6 +154,22 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	char* err;
+
+	if (set_pragma(db, err, "foreign_keys", "ON"))
+	{
+		fprintf(stderr, "Failed to enable foreign keys constraint.\n"
+				"Make sure SQLite is compiled with neither:\n"
+				" - SQLITE_OMIT_FOREIGN_KEY\n"
+				" - SQLITE_OMIT_TRIGGER\n\n"
+				"Error: %s\n", err);
+
+		sqlite3_free(err);
+		sqlite3_close(db);
+
+		return EXIT_FAILURE;
+	}
+
 	parking_server server(db);
 
 	for (int index = optind; index < argc; index++)
@@ -207,6 +224,16 @@ int main(int argc, char* argv[])
 				fprintf(stdout, "Undocked successfully.\n");
 			else
 				fprintf(stderr, "Failed to undock.\n");
+		}
+		else if (strcmp(argv[index], "seconds") == 0)
+		{
+			if (argc <= index + 1)
+				break;
+
+			int id = atoi(argv[++index]);
+
+			fprintf(stdout, "Ship at pad %d has been docked for %d seconds.\n",
+					id, server.get_seconds_docked(id));
 		}
 		else if (strcmp(argv[index], "dump") == 0)
 		{

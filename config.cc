@@ -78,10 +78,11 @@ int init_ships(sqlite3*& db, char*& err)
 			"CREATE TABLE IF NOT EXISTS 'ships'"
 			"\n("
 			"\n    ship_id INTEGER PRIMARY KEY,"
+			"\n    pad_id INTEGER UNIQUE NOT NULL,"
 			"\n    license TEXT UNIQUE NOT NULL,"
 			"\n    manufacturer TEXT,"
 			"\n    weight REAL NOT NULL,"
-			"\n    pad_id INTEGER UNIQUE NOT NULL,"
+			"\n    date TEXT NOT NULL,"
 			"\n    FOREIGN KEY (pad_id) REFERENCES 'pads'"
 			"\n    ON DELETE CASCADE ON UPDATE CASCADE"
 			"\n);",

@@ -90,6 +90,38 @@ bool parking_server::dock_is_free(int id) const
 	return (rc == SQLITE_OK);
 }
 
+static int get_seconds_docked_callback(void* var, int argc, char** argv, char**)
+{
+	return (*reinterpret_cast<int*>(var) = atoi(argv[0])) == 0;
+}
+
+int parking_server::get_seconds_docked(int id) const
+{
+	char* statement;
+	char* err;
+
+	int seconds = -1;
+
+	int c;
+	int rc = -1;
+
+	if ((c = asprintf(&statement, 
+					"SELECT CAST ((JulianDay('NOW') - JulianDay(date)"
+					") * 24 * 60 * 60 AS INTEGER) FROM ships WHERE pad_id = %d;", id)) > 0)
+	{
+		if ((rc = sqlite3_exec(_db, statement, 
+						get_seconds_docked_callback, &seconds, &err)) != SQLITE_OK)
+		{
+			fprintf(stderr, "SQL Error %d in get_seconds_docked - %s\nQuery: %s\n", rc, err, statement);
+			sqlite3_free(err);
+		}
+
+		free(statement);
+	}
+
+	return seconds;
+}
+
 int parking_server::dock_ship(int id, float weight, const char* license)
 {
 	char* statement;
@@ -98,8 +130,8 @@ int parking_server::dock_ship(int id, float weight, const char* license)
 	int c, rc;
 
 	if ((c = asprintf(&statement, 
-					"INSERT INTO ships (pad_id, weight, license) "
-					"VALUES (%d, %f, '%s');", id, weight, license)) > 0)
+					"INSERT INTO ships (pad_id, weight, license, date) "
+					"VALUES (%d, %f, '%s', DATETIME('NOW'));", id, weight, license)) > 0)
 	{
 		if ((rc = sqlite3_exec(_db, statement, nullptr, nullptr, &err)) != SQLITE_OK)
 		{
