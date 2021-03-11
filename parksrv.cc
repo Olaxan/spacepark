@@ -85,13 +85,12 @@ bool parking_server::dock_is_free(int id) const
 		free(statement);
 	}
 
-
 	// If the response code is 0, then the callback hasn't aborted the query,
 	// and the range constraints haven't failed -- i.e we're fine!
 	return (rc == SQLITE_OK);
 }
 
-int parking_server::dock_ship(int id, const char*& license)
+int parking_server::dock_ship(int id, float weight, const char* license)
 {
 	char* statement;
 	char* err;
@@ -99,12 +98,12 @@ int parking_server::dock_ship(int id, const char*& license)
 	int c, rc;
 
 	if ((c = asprintf(&statement, 
-					"INSERT INTO ships (pad_id, license) "
-					"VALUES (%d, %s);", id, license)) > 0)
+					"INSERT INTO ships (pad_id, weight, license) "
+					"VALUES (%d, %f, '%s');", id, weight, license)) > 0)
 	{
 		if ((rc = sqlite3_exec(_db, statement, nullptr, nullptr, &err)) != SQLITE_OK)
 		{
-			fprintf(stderr, "SQL Error %d in dock_ship - %s\n", rc, err);
+			fprintf(stderr, "SQL Error %d in dock_ship - %s\nQuery: %s\n", rc, err, statement);
 			sqlite3_free(err);
 		}
 	}

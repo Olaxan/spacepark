@@ -44,9 +44,11 @@ void create_default_config(fs::path& stream)
 int init_terminals(sqlite3*& db, char*& err)
 {
 	return sqlite3_exec(db,
-			"CREATE TABLE IF NOT EXISTS 'terminals' ("
-			"terminal_id INTEGER PRIMARY KEY,"
-			"name TEXT UNIQUE);",
+			"CREATE TABLE IF NOT EXISTS 'terminals'"
+			"\n("
+			"\n    terminal_id INTEGER PRIMARY KEY,"
+			"\n    name TEXT UNIQUE"
+			"\n);",
 			nullptr,
 			nullptr,
 			&err);
@@ -57,12 +59,14 @@ int init_pads(sqlite3*& db, char*& err)
 	// Of course this shouldn't be hardcoded
 	// But I have to draw the line somewhere
 	return sqlite3_exec(db, 
-			"CREATE TABLE IF NOT EXISTS 'pads' ("
-			"pad_id INTEGER PRIMARY KEY,"
-			"terminal_id INTEGER NOT NULL,"
-			"max_weight REAL NOT NULL,"
-			"FOREIGN KEY (terminal_id) REFERENCES 'terminals'"
-			"ON DELETE CASCADE ON UPDATE CASCADE);",
+			"CREATE TABLE IF NOT EXISTS 'pads'"
+			"\n("
+			"\n    pad_id INTEGER PRIMARY KEY,"
+			"\n    terminal_id INTEGER NOT NULL,"
+			"\n    max_weight REAL NOT NULL,"
+			"\n    FOREIGN KEY (terminal_id) REFERENCES 'terminals'"
+			"\n    ON DELETE CASCADE ON UPDATE CASCADE"
+			"\n);",
 			nullptr, 
 			nullptr,
 			&err);
@@ -71,14 +75,30 @@ int init_pads(sqlite3*& db, char*& err)
 int init_ships(sqlite3*& db, char*& err)
 {
 	return sqlite3_exec(db,
-			"CREATE TABLE IF NOT EXISTS 'ships' ("
-			"ship_id INTEGER PRIMARY KEY,"
-			"license TEXT NOT NULL,"
-			"manufacturer TEXT,"
-			"weight REAL NOT NULL,"
-			"pad_id INTEGER UNIQUE NOT NULL,"
-			"FOREIGN KEY (pad_id) REFERENCES 'pads'"
-			"ON DELETE CASCADE ON UPDATE CASCADE);",
+			"CREATE TABLE IF NOT EXISTS 'ships'"
+			"\n("
+			"\n    ship_id INTEGER PRIMARY KEY,"
+			"\n    license TEXT UNIQUE NOT NULL,"
+			"\n    manufacturer TEXT,"
+			"\n    weight REAL NOT NULL,"
+			"\n    pad_id INTEGER UNIQUE NOT NULL,"
+			"\n    FOREIGN KEY (pad_id) REFERENCES 'pads'"
+			"\n    ON DELETE CASCADE ON UPDATE CASCADE"
+			"\n);",
+			nullptr,
+			nullptr,
+			&err);
+}
+
+int init_triggers(sqlite3*& db, char*& err)
+{
+	return sqlite3_exec(db, 
+			"CREATE TRIGGER IF NOT EXISTS"
+			"\nBEFORE INSERT ON ships"
+			"\nWHEN NEW.weight > (SELECT max_weight FROM pads WHERE pad_id = NEW.pad_id)"
+			"\nBEGIN"
+			"\n   SELECT RAISE(FAIL, 'Ship exceeds max weight.');" 
+			"\nEND;",
 			nullptr,
 			nullptr,
 			&err);
@@ -194,6 +214,12 @@ int main(int argc, char* argv[])
 			if (init_ships(db, err))
 			{
 				fprintf(stderr, "Failed to init ships table - %s\n", err);
+				sqlite3_free(err);
+				errc++;
+			}
+			if (init_triggers(db, err))
+			{
+				fprintf(stderr, "Failed to init triggers - %s\n", err);
 				sqlite3_free(err);
 				errc++;
 			}

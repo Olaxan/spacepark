@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 		}
 		else if (strcmp(argv[index], "free") == 0)
 		{
-			if (index + 1 < argc)
+			if (argc > index + 1)
 			{
 				int dock = atoi(argv[++index]);
 				bool is_free = server.dock_is_free(dock);
@@ -171,6 +171,20 @@ int main(int argc, char* argv[])
 				else
 					fprintf(stderr, "No free dock found!");
 			}
+		}
+		else if (strcmp(argv[index], "dock") == 0)
+		{
+			if (argc <= index + 3)
+				break;
+
+			int id = atoi(argv[++index]);
+			float weight = atof(argv[++index]);
+			int rc = server.dock_ship(id, weight, argv[++index]);
+
+			if (rc == SQLITE_OK)
+				fprintf(stdout, "Docked successfully.\n");
+			else
+				fprintf(stderr, "Error %d occurred during docking.\n", rc);
 		}
 	}
 
