@@ -15,6 +15,10 @@ class parking_server
 		~parking_server();
 
 		int get_free_dock(float weight) const;
+		bool dock_is_free(int id) const;
+
+		int dock_ship(int id, const char*& license);
+		int undock_ship(int id, const char*& license);
 
 		int open(int begin, int end);
 

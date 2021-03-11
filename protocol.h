@@ -19,6 +19,24 @@ struct msg_head
 	msg_type type;
 };
 
+struct ship_data_head
+{
+	size_t name_len;
+	size_t license_len;
+	size_t manufacturer_len;
+};
+
+struct ship_data
+{
+	ship_data_head head;
+
+	float weight;
+
+	char* name;
+	char* license_len;
+	char* manufacturer_len;
+};
+
 struct dock_query_msg
 {
 	msg_type head;

@@ -157,11 +157,20 @@ int main(int argc, char* argv[])
 		}
 		else if (strcmp(argv[index], "free") == 0)
 		{
-			int dock;
-			if ((dock = server.get_free_dock(0)) > 0)
-				fprintf(stdout, "Found free dock: %d\n", dock);
+			if (index + 1 < argc)
+			{
+				int dock = atoi(argv[++index]);
+				bool is_free = server.dock_is_free(dock);
+				fprintf(stdout, "Dock %d is %s.\n", dock, is_free ? "free" : "occupied");
+			}
 			else
-				fprintf(stderr, "No free dock found!");
+			{
+				int dock;
+				if ((dock = server.get_free_dock(0)) > 0)
+					fprintf(stdout, "Found free dock: %d\n", dock);
+				else
+					fprintf(stderr, "No free dock found!");
+			}
 		}
 	}
 

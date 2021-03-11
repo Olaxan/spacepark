@@ -35,8 +35,7 @@ int parking_server::get_free_dock(float weight) const
 	char* err;
 
 	int dock = -1;
-	int c = 0;
-	int rc = 0;
+	int c, rc;
 
 	if ((c = asprintf(&statement,
 			"SELECT pad_id FROM pads "
@@ -59,6 +58,58 @@ int parking_server::get_free_dock(float weight) const
 	free(statement);
 
 	return dock;
+}
+
+static int dock_is_free_callback(void*, int, char**, char**)
+{
+	return EXIT_FAILURE;	
+}
+
+bool parking_server::dock_is_free(int id) const
+{
+	// No range check here! We should do that.
+
+	char* statement;
+	char* err;
+ 
+	int c;
+	int rc = -1;
+
+	if ((c = asprintf(&statement, "SELECT pad_id FROM ships WHERE pad_id = %d;", id)) > 0)
+	{
+		if ((rc = sqlite3_exec(_db, statement, dock_is_free_callback, nullptr, &err)) != SQLITE_OK)
+		{
+			sqlite3_free(err);
+		}
+		
+		free(statement);
+	}
+
+
+	// If the response code is 0, then the callback hasn't aborted the query,
+	// and the range constraints haven't failed -- i.e we're fine!
+	return (rc == SQLITE_OK);
+}
+
+int parking_server::dock_ship(int id, const char*& license)
+{
+	char* statement;
+	char* err;
+
+	int c, rc;
+
+	if ((c = asprintf(&statement, 
+					"INSERT INTO ships (pad_id, license) "
+					"VALUES (%d, %s);", id, license)) > 0)
+	{
+		if ((rc = sqlite3_exec(_db, statement, nullptr, nullptr, &err)) != SQLITE_OK)
+		{
+			fprintf(stderr, "SQL Error %d in dock_ship - %s\n", rc, err);
+			sqlite3_free(err);
+		}
+	}
+
+	return rc;
 }
 
 int parking_server::open(int begin, int end)
@@ -188,7 +239,6 @@ int parking_server::open(int begin, int end)
 					{
 						case msg_type::dock_query:
 						{
-							// Get a free dock and return it
 
 							dock_query_msg msg {};
 							memcpy(&msg, _data, sizeof(dock_query_msg));
