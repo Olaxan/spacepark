@@ -4,6 +4,8 @@ constexpr int max_license_len = 64;
 
 enum class msg_type
 {
+	dock_query,
+	dock_query_response,
 	dock_request,
 	undock_request,
 	dock_response,
@@ -12,10 +14,21 @@ enum class msg_type
 
 struct msg_head
 {
-	unsigned length;
-	unsigned seq_no;
+	size_t length;
 	unsigned id;
 	msg_type type;
+};
+
+struct dock_query_msg
+{
+	msg_type head;
+	float weight;
+};
+
+struct dock_query_response_msg
+{
+	msg_head head;
+	int dock_id;
 };
 
 struct dock_change_request_msg

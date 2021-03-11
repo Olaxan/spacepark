@@ -155,6 +155,14 @@ int main(int argc, char* argv[])
 			else
 				fprintf(stdout, "Server exited cleanly.\n");
 		}
+		else if (strcmp(argv[index], "free") == 0)
+		{
+			int dock;
+			if ((dock = server.get_free_dock(0)) > 0)
+				fprintf(stdout, "Found free dock: %d\n", dock);
+			else
+				fprintf(stderr, "No free dock found!");
+		}
 	}
 
 	sqlite3_close(db);

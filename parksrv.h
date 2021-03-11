@@ -14,8 +14,9 @@ class parking_server
 		parking_server(sqlite3*& db);
 		~parking_server();
 
+		int get_free_dock(float weight) const;
+
 		int open(int begin, int end);
-		void close();
 
 	private:
 

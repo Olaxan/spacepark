@@ -13,6 +13,8 @@
 #include <functional>
 #include <memory>
 
+#include "protocol.h"
+
 parking_server::parking_server(sqlite3*& db)
 	: _db(db)
 {
@@ -22,6 +24,42 @@ parking_server::~parking_server()
 {
 }
 
+static int get_free_dock_callback(void* var, int, char** argv, char**)
+{
+	return (*reinterpret_cast<int*>(var) = atoi(argv[0])) == 0;
+}
+
+int parking_server::get_free_dock(float weight) const
+{
+	char* statement;
+	char* err;
+
+	int dock = -1;
+	int c = 0;
+	int rc = 0;
+
+	if ((c = asprintf(&statement,
+			"SELECT pad_id FROM pads "
+			"WHERE pad_id NOT IN ("
+			"SELECT pad_id FROM ships) "
+			"AND max_weight > %f "
+			"LIMIT 1;", weight)) > 0)
+	{
+
+		if ((rc = sqlite3_exec(_db, statement,
+				get_free_dock_callback,
+				&dock, 
+				&err)) > 0)
+		{
+			fprintf(stderr, "SQL Error %d in get_free_dock - %s\n", rc, err);
+			sqlite3_free(err);
+		}
+	}
+
+	free(statement);
+
+	return dock;
+}
 
 int parking_server::open(int begin, int end)
 {
@@ -129,7 +167,66 @@ int parking_server::open(int begin, int end)
 
 			if (FD_ISSET(sd, &readfds))
 			{
+				if ((valread = read(sd, _data, buffer_size)) == 0)
+				{
+					getpeername(sd, 
+							reinterpret_cast<struct sockaddr*>(&address),
+							reinterpret_cast<socklen_t*>(&addrlen));
 
+					fprintf(stdout, "Disconnected %s:%d.\n",
+							inet_ntoa(address.sin_addr), ntohs(address.sin_port));
+
+					close(sd);
+					client_sockets[i] = 0;
+				}
+				else if (valread > -1)
+				{
+					msg_head head {};
+					memcpy(&head, _data, valread);
+
+					switch (head.type)
+					{
+						case msg_type::dock_query:
+						{
+							// Get a free dock and return it
+
+							dock_query_msg msg {};
+							memcpy(&msg, _data, sizeof(dock_query_msg));
+							
+							size_t bytes = sizeof(dock_query_response_msg);
+							int dock = get_free_dock(msg.weight);
+
+							dock_query_response_msg response
+							{
+								msg_head { bytes, 0, msg_type::dock_query_response }, 
+								dock	
+							};
+
+							if (send(sd, &response, bytes, 0) == static_cast<ssize_t>(bytes))
+							{
+								fprintf(stdout, "Query response - dock at %d.\n", dock);
+							}
+
+							break;
+						}
+						case msg_type::dock_request:
+						{
+							size_t bytes = sizeof(dock_change_request_msg);
+
+							dock_change_request_msg msg {};
+							memcpy(&msg, _data, bytes); 
+							break;
+						}
+						case msg_type::undock_request:
+						{
+							dock_change_request_msg msg {};
+							memcpy(&msg, _data, sizeof(dock_change_request_msg));
+							break;
+						}
+						default:
+							break;
+					}
+				}
 			}
 		}
 	}
