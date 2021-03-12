@@ -3,7 +3,7 @@
 A (partly) headless parking system server running SQLite, for managing small to medium spaceship docks.
 This is my solution to the VISMA Graduate Program code assignment.
 It is not fully complete, and contains several bugs 
-	-- some would probably be critical for spaceflight purposes!!
+  -- some would probably be critical for spaceflight purposes!!
 
 ## Limitations
 
@@ -69,7 +69,8 @@ is Linux only (but who'd want to run a server on Windows anyway?).
 ### Linux:
 
 Build project files with CMake and compile on GCC 8.2+
-(required for std::filesystem).
+(required for std::filesystem, can easily be removed which would lower
+ the compiler requirement significantly).
 Remember to copy compile-commands.json to the root directory 
 if you want YCM syntax highlighting.
 
