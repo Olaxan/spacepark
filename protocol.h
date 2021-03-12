@@ -53,6 +53,7 @@ struct dock_change_request_msg
 {
 	msg_head head;
 	int dock_id;
+	float weight;
 	char license[max_license_len];
 };
 
@@ -66,7 +67,7 @@ struct undock_response_msg
 {
 	msg_head head;
 	int response;
-	int cost;
+	int fee;
 };
 
 

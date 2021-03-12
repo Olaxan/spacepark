@@ -340,37 +340,67 @@ int parking_server::open(int begin, int end)
 						case msg_type::dock_query:
 						{
 
+							size_t msg_bytes = sizeof(dock_query_msg);
+							size_t rsp_bytes = sizeof(dock_query_response_msg);
+
 							dock_query_msg msg {};
-							memcpy(&msg, _data, sizeof(dock_query_msg));
-							
-							size_t bytes = sizeof(dock_query_response_msg);
+							memcpy(&msg, _data, msg_bytes); 
+
 							int dock = get_free_dock(msg.weight);
 
-							dock_query_response_msg response
+							dock_query_response_msg rsp 
 							{
-								msg_head { bytes, 0, msg_type::dock_query_response }, 
+								msg_head { rsp_bytes, 0, msg_type::dock_query_response }, 
 								dock	
 							};
 
-							if (send(sd, &response, bytes, 0) == static_cast<ssize_t>(bytes))
-							{
-								fprintf(stdout, "Query response - dock at %d.\n", dock);
-							}
+							if (send(sd, &rsp, rsp_bytes, 0) == static_cast<ssize_t>(rsp_bytes))
+								fprintf(stdout, "Query response (%lu bytes) sent.\n", rsp_bytes);
 
 							break;
 						}
 						case msg_type::dock_request:
 						{
-							size_t bytes = sizeof(dock_change_request_msg);
+							size_t msg_bytes = sizeof(dock_change_request_msg);
+							size_t rsp_bytes = sizeof(dock_response_msg);
 
 							dock_change_request_msg msg {};
-							memcpy(&msg, _data, bytes); 
+							memcpy(&msg, _data, msg_bytes); 
+
+							int rc = dock_ship(msg.dock_id, msg.weight, msg.license); 
+
+							dock_response_msg rsp 
+							{
+								msg_head { rsp_bytes, 0, msg_type::dock_response },
+								rc
+							};
+
+							if (send(sd, &rsp, rsp_bytes, 0) == static_cast<ssize_t>(rsp_bytes))
+								fprintf(stdout, "Dock request (%lu bytes) sent.\n", rsp_bytes);
+
 							break;
 						}
 						case msg_type::undock_request:
 						{
+							size_t msg_bytes = sizeof(dock_change_request_msg);
+							size_t rsp_bytes = sizeof(undock_response_msg);
+
 							dock_change_request_msg msg {};
-							memcpy(&msg, _data, sizeof(dock_change_request_msg));
+							memcpy(&msg, _data, msg_bytes); 
+
+							int fee = get_fee(msg.dock_id);
+							int rc = undock_ship(msg.dock_id);
+
+							undock_response_msg rsp 
+							{
+								msg_head { rsp_bytes, 0, msg_type::undock_response },
+								rc,
+								fee
+							};
+
+							if (send(sd, &rsp, rsp_bytes, 0) == static_cast<ssize_t>(rsp_bytes))
+								fprintf(stdout, "Undock request (%lu bytes) sent.\n", rsp_bytes);
+
 							break;
 						}
 						default:
