@@ -25,6 +25,7 @@ I'm also aware that sending structs over TCP is bad practice and vulnerable to p
 ### Configuration
 
 This repository includes a pre-setup database and configuration file (park.db, config.cfg).
+Place them in same directory as the binary, or refer to them with the -d and -c switches.
 In order to setup your own, follow these steps:
 1. Remove any old database or config files.
 1. Run `spacepark-config default` in order to generate a config file,
