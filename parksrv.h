@@ -17,6 +17,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * If issues occur, contact me on fredrik.lind.96@gmail.com
+ *
  */
 
 #pragma once
