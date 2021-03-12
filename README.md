@@ -5,26 +5,11 @@ This is my solution to the VISMA Graduate Program code assignment.
 It is not fully complete, and contains several bugs 
   -- some would probably be critical for spaceflight purposes!!
 
-## Limitations
-
-Quite a few!
-
-* The built-in help is lacking and some commands fail without reporting why.
-* Most invalid database operations fail without helpful error codes or messages, 
-so the user won't get a clue what's going wrong. This is partly because the functions performing 
-these operations are server-internal (and as such not meant to be directly interacted with), 
-and partly because I don't have the time to fix this issue.
-* The code could be better commented. Some parts look a little insane?
-* There is a fair bit of code reuse in the SQL queries inside *parksrv.cc*. Perhaps it would be possible to write a wrapper function for dispatching those.
-* Frequently used SQL statements should probably be prepared in advance, and not executed as hardcoded strings every time.
-* The TCP server is untested and lacks a corresponding client. 
-I'm also aware that sending structs over TCP is bad practice and vulnerable to problems with endianness, packing, and compiler trickery. It was mostly just for fun -- the messaging should definitely be serialized with something like JSON, XML, or Protocol Buffers.
-
 ## Usage
 
 ### Configuration
 
-This repository includes a pre-setup database and configuration file (park.db, config.cfg).
+This repository includes a pre-setup database and configuration file (park.db, config.cfg), in the demo folder.
 Place them in same directory as the binary, or refer to them with the -d and -c switches.
 In order to setup your own, follow these steps:
 1. Remove any old database or config files.
@@ -78,6 +63,20 @@ The project should include all external dependencies,
 but if you have problems with missing libraries, install (with your favourite package manager):
 * libconfig 
 
+## Limitations
+
+Quite a few!
+
+* The built-in help is lacking and some commands fail without reporting why.
+* Most invalid database operations fail without helpful error codes or messages, 
+so the user won't get a clue what's going wrong. This is partly because the functions performing 
+these operations are server-internal (and as such not meant to be directly interacted with), 
+and partly because I don't have the time to fix this issue.
+* The code could be better commented. Some parts look a little insane?
+* There is a fair bit of code reuse in the SQL queries inside *parksrv.cc*. Perhaps it would be possible to write a wrapper function for dispatching those.
+* Frequently used SQL statements should probably be prepared in advance, and not executed as hardcoded strings every time.
+* The TCP server is untested and lacks a corresponding client. 
+I'm also aware that sending structs over TCP is bad practice and vulnerable to problems with endianness, packing, and compiler trickery. It was mostly just for fun -- the messaging should definitely be serialized with something like JSON, XML, or Protocol Buffers.
 ## Dependencies
 
 * sqlite3 
