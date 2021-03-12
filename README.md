@@ -62,6 +62,7 @@ if you want YCM syntax highlighting.
 The project should include all external dependencies, 
 but if you have problems with missing libraries, install (with your favourite package manager):
 * libconfig 
+* sqlite3
 
 ## Limitations
 
