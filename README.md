@@ -46,6 +46,10 @@ All operations can be performed one-time by running the appropriate server comma
 * Run `spacepark-server fee <DOCK ID>` to query the current parking fee of a ship parked at a specified dock -- note that these fees may vary depending on the dock (currently there is no way to specifiy these fees using the application, it must be done with a database query).
 * Run `spacepark-server dump <TABLE>` to get a printout of all entries in the specified table. Currently named tables include *ships*, *pads*, *terminals* and *docking-log*.
 
+### Using the client
+
+What client?
+
 ## Build instructions
 
 The application is dependent on GNU extensions, such as asprintf 
