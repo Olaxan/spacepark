@@ -18,17 +18,20 @@ using namespace libconfig;
 void print_usage()
 {
 	printf("SPACEPARK configuration utility\n"
-			"Copyleft 2142 - Tonto Turbo AB\n\n"
-			"Use this utility to configure the main application and setup a database.\n\n"
-			"usage: \tspacepark-config [-h] [-c <path>] [-d <path>] <command> [<args>]\n"
-		    "options:\n"
-		    "\t-h:\t\tShows this help\n"
-			"\t-c <path>:\tSpecify the configuration path\n"
-			"\t-d <path>:\tSpecify the database file path\n\n"
-			"commands:\n"
-			"default\t\tCreate a default configuration file.\n"
-			"init\t\tInitialize (or re-initialize) the database\n"
-			"add\t\tAdd an item to the database\n"
+			"\nSpace-copyright 2142 - Tonto Turbo AB\n"
+			"\nUse this utility to configure the main application and setup a database.\n"
+			"\nusage: \tspacepark-config [-h] [-c <path>] [-d <path>] <command> [<args>]"
+		    "\noptions:"
+		    "\n\t-h:\t\tShows this help"
+			"\n\t-c <path>:\tSpecify the configuration path"
+			"\n\t-d <path>:\tSpecify the database file path\n"
+			"\ncommands:\n"
+			"\n\tdefault\t\tCreate a default configuration file."
+			"\n\tinit\t\tInitialize (or re-initialize) the database"
+			"\n\tadd\t\tAdd an item to the database:"
+			"\n\t\tterminal <NAME> ... "
+			"\n\t\tpad <TERMID> <WEIGHT> <COUNT>"
+			"\n"
 	      );
 }
 
@@ -37,7 +40,8 @@ void create_default_config(fs::path& stream)
 	Config cfg;
 	Setting &root = cfg.getRoot();
 	root.add("db_path", Setting::TypeString) = fs::current_path().append("park.db");
-	root.add("port", Setting::TypeInt) = 5000;
+	root.add("port_begin", Setting::TypeInt) = 5000;
+	root.add("port_end", Setting::TypeInt) = 5100;
 	cfg.writeFile(stream.c_str());
 }
 
@@ -56,8 +60,6 @@ int init_terminals(sqlite3*& db, char*& err)
 
 int init_pads(sqlite3*& db, char*& err)
 {
-	// Of course this shouldn't be hardcoded
-	// But I have to draw the line somewhere
 	return sqlite3_exec(db, 
 			"CREATE TABLE IF NOT EXISTS 'pads'"
 			"\n("

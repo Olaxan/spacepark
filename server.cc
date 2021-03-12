@@ -21,12 +21,23 @@ using namespace libconfig;
 void print_usage()
 {
 	printf("SPACEPARK server utility\n"
-			"Copyleft 2142 - Tonto Turbo AB\n\n"
-			"Launch a headless SPACEPARK server, with an optional CLI\n\n"
-			"usage: \tspacepark [-h] [-s] [-w <wxh>] [-o <path>]\n"
-		       "\t[-r <rays>] [-n <name>] [-x <seed>] [-b <bounces>]\n"
-		       "options:\n"
-		       "\t-h:\t\tShows this help.\n"
+			"\nSpace-copyright 2142 - Tonto Turbo AB\n"
+			"\nUse this utility to launch a spacepark server, or invoke one-time commands.\n"
+			"\nusage:\tspacepark-server [-h] [-c <path>] [-p <begin-end>]"
+			"\n\t[-d <path>] <command> [<args>]"
+		    "\noptions:"
+		    "\n\t-h:\t\tShows this help"
+			"\n\t-c <path>:\tSpecify the configuration path"
+			"\n\t-d <path>:\tSpecify the database file path\n"
+			"\n\t-p <begin-end>:\tSpecify the port range\n"
+			"\ncommands:\n"
+			"\n\topen\t\tOpen the server"
+			"\n\tdock\t\tDock a ship at a specified pad"
+			"\n\tundock\t\tUndock a ship from a specified pad"
+			"\n\tseconds\t\tGet number of seconds docked at pad"
+			"\n\tfee\t\tGet current parking fee for ship docked at pad"
+			"\n\tdump\t\tDump a DB table into stdout"
+			"\n"
 	      );
 }
 
@@ -47,8 +58,9 @@ int main(int argc, char* argv[])
 	fs::path config_path = fs::current_path().append("config.cfg");
 	fs::path db_path;
 	
-	int port = 0;
-	
+	int port_begin = 0;
+	int port_end = 0;
+
 	int c;
 
 	opterr = 0;
@@ -67,7 +79,11 @@ int main(int argc, char* argv[])
 				db_path = optarg;
 				break;
 			case 'p':
-				port = atoi(optarg);
+				if (sscanf(optarg, "%d-%d", &port_begin, &port_end) != 2)
+				{
+					fprintf(stderr, "Specify a valid port range in the format 'A-B'.\n");
+					return EXIT_FAILURE;
+				}
 				break;
 			case '?':
 				if (optopt == 'c' || optopt == 'p')
@@ -110,14 +126,18 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		if (port == 0)
+		if (port_begin == 0)
 		{
 			try
 			{
-				port = cfg.lookup("port");
+				port_begin = cfg.lookup("port_begin");
+				port_end = cfg.lookup("port_end");
 			}
 			catch (const SettingNotFoundException &nfex)
-			{ } // Do nothing -- ASIO autoconfigures a port when given a 0
+			{
+				fprintf(stderr, "No port range was specified or configured.\n");
+				return EXIT_FAILURE;
+			}
 		}
 	}
 	else
@@ -176,10 +196,12 @@ int main(int argc, char* argv[])
 	{
 		if (strcmp(argv[index], "open") == 0)
 		{
-			if (server.open(port, port + 64))
+			if (server.open(port_begin, port_end))
 				fprintf(stderr, "Server exited with an error.\n");
 			else
 				fprintf(stdout, "Server exited cleanly.\n");
+
+			break;
 		}
 		else if (strcmp(argv[index], "free") == 0)
 		{
@@ -197,11 +219,16 @@ int main(int argc, char* argv[])
 				else
 					fprintf(stderr, "No free dock found!");
 			}
+
+			break;
 		}
 		else if (strcmp(argv[index], "dock") == 0)
 		{
 			if (argc <= index + 3)
+			{
+				fprintf(stderr, "Usage: spacepark-dock <PAD ID> <WEIGHT> <LICENSE>\n");
 				break;
+			}
 
 			int id = atoi(argv[++index]);
 			float weight = atof(argv[++index]);
@@ -211,11 +238,16 @@ int main(int argc, char* argv[])
 				fprintf(stdout, "Docked successfully.\n");
 			else
 				fprintf(stderr, "Error %d occurred during docking.\n", rc);
+
+			break;
 		}
 		else if (strcmp(argv[index], "undock") == 0)
 		{
 			if (argc <= index + 1)
+			{
+				fprintf(stderr, "Usage: spacepark-server undock <PAD ID>\n");
 				break;
+			}
 
 			int id = atoi(argv[++index]);
 			int fee = server.get_fee(id);
@@ -225,21 +257,31 @@ int main(int argc, char* argv[])
 				fprintf(stdout, "Undocked successfully, parking fee is %d credits.\n", fee);
 			else
 				fprintf(stderr, "Failed to undock.\n");
+
+			break;
 		}
 		else if (strcmp(argv[index], "seconds") == 0)
 		{
 			if (argc <= index + 1)
+			{
+				fprintf(stderr, "Usage: spacepark-server seconds <PAD ID>\n");
 				break;
+			}
 
 			int id = atoi(argv[++index]);
 
 			fprintf(stdout, "Ship at pad %d has been docked for %d seconds.\n",
 					id, server.get_seconds_docked(id));
+
+			break;
 		}
 		else if (strcmp(argv[index], "fee") == 0)
 		{
 			if (argc <= index + 1)
+			{
+				fprintf(stderr, "Usage: spacepark-server fee <PAD ID>\n");
 				break;
+			}
 
 			int id = atoi(argv[++index]);
 			int fee = server.get_fee(id);
@@ -249,17 +291,22 @@ int main(int argc, char* argv[])
 			else
 				fprintf(stdout, "Ship at pad %d has a parking fee of %d credits.\n",
 						id, fee);
+
+			break;
 		}
 		else if (strcmp(argv[index], "dump") == 0)
 		{
 			if (argc <= index + 1)
+			{
+				fprintf(stderr, "Usage: spacepark-server dump <TABLE>\n");
 				break;
+			}
 
 			char* statement;
 			char* err;
 			int c, rc;
 
-			// As indicated by the asterisk, this is for debugging primariyl!!
+			// This is for debugging primarly!
 			if ((c = asprintf(&statement, "SELECT * FROM %s;", argv[++index])) > 0)
 			{
 				sqlite3_stmt* s;
@@ -285,9 +332,15 @@ int main(int argc, char* argv[])
 				sqlite3_finalize(s);
 				free(statement);
 			}
+
+			break;
 		}
+		else print_usage();
 	}
 
+	// Ensure we always close the DB connection.
+	// Make sure we reach this point or close it explicitly.
 	sqlite3_close(db);
+
 	return EXIT_SUCCESS;
 } 
