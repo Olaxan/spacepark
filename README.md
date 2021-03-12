@@ -28,10 +28,12 @@ and edit it to your likings.
 
 ### Running the server
 
-The server can be launched with `spacepark-server open`, which will start a TCP-IPv4 server listening
+The server can be launched with `spacepark-server open`, which will start a TCP-IPv4* server listening
 to the port range specified in the configuration, or by running the application with the -p switch.
 
 Close the server by invoking SIGINT. It's not graceful! Hopefully it's not doing any DB operations when you do that (although SQLite should handle an interrupted transaction fairly well).
+
+_*) Hopefully IPv4 is still around when we have readily available commercial spaceflight._
 
 ### Invoking local commands
 
