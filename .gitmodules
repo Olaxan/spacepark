@@ -1,0 +1,3 @@
+[submodule "exts/sqlite-amalgamation"]
+	path = exts/sqlite-amalgamation
+	url = https://github.com/azadkuh/sqlite-amalgamation

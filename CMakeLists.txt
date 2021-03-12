@@ -35,5 +35,5 @@ ADD_EXECUTABLE(spacepark-config ${config_files})
 ADD_DEPENDENCIES(spacepark-server exts)
 ADD_DEPENDENCIES(spacepark-config exts)
 
-TARGET_LINK_LIBRARIES(spacepark-server PUBLIC exts config++ sqlite3)
-TARGET_LINK_LIBRARIES(spacepark-config PUBLIC exts config++ sqlite3)
+TARGET_LINK_LIBRARIES(spacepark-server PUBLIC exts)
+TARGET_LINK_LIBRARIES(spacepark-config PUBLIC exts)
