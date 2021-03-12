@@ -86,7 +86,7 @@ int init_ships(sqlite3*& db, char*& err)
 			"\n    weight REAL NOT NULL,"
 			"\n    date TEXT NOT NULL,"
 			"\n    FOREIGN KEY (pad_id) REFERENCES 'pads'"
-			"\n    ON DELETE CASCADE ON UPDATE CASCADE"
+			"\n    ON DELETE NO ACTION ON UPDATE NO ACTION"
 			"\n);",
 			nullptr,
 			nullptr,
@@ -286,14 +286,17 @@ int main(int argc, char* argv[])
 					// print add terminal usage instructions
 					break;
 				}
-				
-				if (add_terminal(db, err, argv[++index]))
+
+				while (++index < argc)
 				{
-					fprintf(stderr, "Failed to add terminal - %s\n", err);
-					sqlite3_free(err);
+					if (add_terminal(db, err, argv[index]))
+					{
+						fprintf(stderr, "Failed to add terminal - %s\n", err);
+						sqlite3_free(err);
+					}
+					else 
+						fprintf(stdout, "Successfully added terminal %s!\n", argv[index]);
 				}
-				else 
-					fprintf(stdout, "Successfully added terminal!\n");
 			}
 			else if (strcmp(argv[index], "pad") == 0)
 			{
@@ -306,13 +309,21 @@ int main(int argc, char* argv[])
 				int terminal_id = atoi(argv[++index]);
 				float max_weight = atof(argv[++index]);
 
-				if (add_pad(db, err, terminal_id, max_weight))
+
+				int c = (index + 1 < argc) ? atoi(argv[++index]) : 1;
+				int sc = 0;
+
+				for (int i = 0; i < c; i++)
 				{
-					fprintf(stderr, "Failed to add pad - %s\n", err);
-					sqlite3_free(err);
+					if (add_pad(db, err, terminal_id, max_weight))
+					{
+						fprintf(stderr, "Failed to add pad - %s\n", err);
+						sqlite3_free(err);
+					}
+					else sc++;
 				}
-				else 
-					fprintf(stdout, "Successfully added pad!\n");
+
+				fprintf(stdout, "Added %d pads to terminal %d.\n", sc, terminal_id);
 			}
 		}
 		else 

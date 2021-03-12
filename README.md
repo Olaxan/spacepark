@@ -1,8 +1,9 @@
 # SPACEPARK 
 
-A headless parking system server running SQLite, for managing small to medium spaceship docks.
+A (partly) headless parking system server running SQLite, for managing small to medium spaceship docks.
 This is my solution to the VISMA Graduate Program code assignment.
-It is not fully complete.
+It is not fully complete, and contains several bugs 
+	-- some would probably be critical for spaceflight purposes!!
 
 ## Limitations
 More than I can count. Most invalid database operations fail without helpful error codes or messages,
@@ -22,7 +23,7 @@ Run with -h flag for usage instructions.
 The application is dependent on GNU extensions, such as asprintf,
 	as well as POSIX functions such as getopt.
 	These can be replaced with relative ease, but in its current state the application
-	is Linux only.
+	is Linux only (but who'd want to run a server on Windows anyway?).
 
 Linux:
 

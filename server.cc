@@ -218,10 +218,11 @@ int main(int argc, char* argv[])
 				break;
 
 			int id = atoi(argv[++index]);
+			int fee = server.get_fee(id);
 			int rc = server.undock_ship(id);
 
 			if (rc == SQLITE_OK)
-				fprintf(stdout, "Undocked successfully.\n");
+				fprintf(stdout, "Undocked successfully, parking fee is %d credits.\n", fee);
 			else
 				fprintf(stderr, "Failed to undock.\n");
 		}
@@ -241,9 +242,13 @@ int main(int argc, char* argv[])
 				break;
 
 			int id = atoi(argv[++index]);
+			int fee = server.get_fee(id);
 
-			fprintf(stdout, "Ship at pad %d has a parking fee of %d.\n",
-					id, server.get_fee(id));
+			if (fee == -1)
+				fprintf(stderr, "No ship is docked at bay %d.\n", id);
+			else
+				fprintf(stdout, "Ship at pad %d has a parking fee of %d credits.\n",
+						id, fee);
 		}
 		else if (strcmp(argv[index], "dump") == 0)
 		{

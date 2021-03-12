@@ -92,7 +92,8 @@ bool parking_server::dock_is_free(int id) const
 
 static int get_first_as_integer(void* var, int, char** argv, char**)
 {
-	return (*reinterpret_cast<int*>(var) = atoi(argv[0])) == 0;
+	*reinterpret_cast<int*>(var) = atoi(argv[0]);
+	return EXIT_SUCCESS;
 }
 
 int parking_server::get_seconds_docked(int id) const
@@ -146,9 +147,9 @@ int parking_server::get_fee(int id) const
 					"\nSELECT"
 					"\nCASE"
 					"\n    WHEN days > 1 THEN"
-					"\n    ROUND(days - 0.5) * cost_day"
+					"\n    ROUND(days + 0.5) * cost_day"
 					"\n    ELSE"
-					"\n    ROUND(days * 24 - 0.5) * cost_hour"
+					"\n    ROUND(days * 24 + 0.5) * cost_hour"
 					"\n    END fee"
 					"\nFROM pads, span"
 					"\nWHERE pad_id = %d", id, id)) > 0)
