@@ -23,7 +23,7 @@ In order to setup your own, follow these steps:
 and edit it to your likings.
 1. Run `spacepark-config init` to initialize an empty database, at the location specified either in the config file or by the -d switch.
 1. Run `spacepark-config add terminal <NAME 1> <NAME 2> <NAME 3> ...` to add any number of terminals (floors).
-1. Run `spacepark config add pad <TERMINAL ID> <MAX WEIGHT> <COUNT> to add landing pads to the specified terminal. Note that the terminal ID is equal to its row ID in the database, not the name. You can find the ID:s for existing terminals by running `spacepark-server dump terminals` (this will be fixed in the future).
+1. Run `spacepark config add pad <TERMINAL ID> <MAX WEIGHT> <COUNT>` to add landing pads to the specified terminal. Note that the terminal ID is equal to its row ID in the database, not the name. You can find the ID:s for existing terminals by running `spacepark-server dump terminals` (this will be fixed in the future).
 1. The server is now ready to use!
 
 ### Running the server
