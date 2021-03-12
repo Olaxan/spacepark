@@ -321,7 +321,8 @@ int main(int argc, char* argv[])
 		{
 			if (argc <= index + 1)
 			{
-				fprintf(stderr, "Usage: spacepark-server dump <TABLE>\n");
+				fprintf(stderr, "Usage: spacepark-server dump <TABLE>"
+						"\nterminals, pads, ships, docking_log\n");
 				break;
 			}
 
