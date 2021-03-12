@@ -341,6 +341,6 @@ int main(int argc, char* argv[])
 	// Ensure we always close the DB connection.
 	// Make sure we reach this point or close it explicitly.
 	sqlite3_close(db);
-
 	return EXIT_SUCCESS;
+
 } 
