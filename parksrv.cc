@@ -24,9 +24,40 @@ parking_server::~parking_server()
 {
 }
 
-static int get_free_dock_callback(void* var, int, char** argv, char**)
+
+/**
+ * This function is run once for every returned row from a SQL query,
+ * and sets the variable 'var' equal to the first column as an integer.
+ *
+ * @param var The input variable which will be set.
+ * @return This function always returns EXIT_SUCCESS.
+ */
+static int get_first_as_integer(void* var, int, char** argv, char**)
+{
+	*reinterpret_cast<int*>(var) = atoi(argv[0]);
+	return EXIT_SUCCESS;
+}
+
+/**
+ * This function is similar to get_first_as_integer(),
+ * but returns 1 (i.e EXIT_FAILURE) if the column
+ * was evaluated to 0.
+ * @param var The input variable which will be set.
+ * @return 1 if var is 0, 0 otherwise.
+ */
+static int get_first_as_integer_not_zero(void* var, int, char** argv, char**)
 {
 	return (*reinterpret_cast<int*>(var) = atoi(argv[0])) == 0;
+}
+
+/**
+ * This function will always return failure,
+ * causing SQLite to report SQLITE_ABORT
+ * -- functioning as a sort of EXISTS-equivalent
+ */
+static int row_exists_callback(void*, int, char**, char**)
+{
+	return EXIT_FAILURE;	
 }
 
 int parking_server::get_free_dock(float weight) const
@@ -46,7 +77,7 @@ int parking_server::get_free_dock(float weight) const
 	{
 
 		if ((rc = sqlite3_exec(_db, statement,
-				get_free_dock_callback,
+				get_first_as_integer_not_zero,
 				&dock, 
 				&err)) > 0)
 		{
@@ -60,14 +91,10 @@ int parking_server::get_free_dock(float weight) const
 	return dock;
 }
 
-static int dock_is_free_callback(void*, int, char**, char**)
-{
-	return EXIT_FAILURE;	
-}
-
 bool parking_server::dock_is_free(int id) const
 {
 	// No range check here! We should do that.
+	// In fact, this whole method is pretty stupid.
 
 	char* statement;
 	char* err;
@@ -77,7 +104,7 @@ bool parking_server::dock_is_free(int id) const
 
 	if ((c = asprintf(&statement, "SELECT pad_id FROM ships WHERE pad_id = %d;", id)) > 0)
 	{
-		if ((rc = sqlite3_exec(_db, statement, dock_is_free_callback, nullptr, &err)) != SQLITE_OK)
+		if ((rc = sqlite3_exec(_db, statement, row_exists_callback, nullptr, &err)) != SQLITE_OK)
 		{
 			sqlite3_free(err);
 		}
@@ -86,14 +113,8 @@ bool parking_server::dock_is_free(int id) const
 	}
 
 	// If the response code is 0, then the callback hasn't aborted the query,
-	// and the range constraints haven't failed -- i.e we're fine!
+	// and the range constraints haven't failed -- i.e. the dock is free!
 	return (rc == SQLITE_OK);
-}
-
-static int get_first_as_integer(void* var, int, char** argv, char**)
-{
-	*reinterpret_cast<int*>(var) = atoi(argv[0]);
-	return EXIT_SUCCESS;
 }
 
 int parking_server::get_seconds_docked(int id) const
@@ -284,11 +305,15 @@ int parking_server::open(int begin, int end)
 				max_sd = sd;
 		}
 
+		// Select a FD ready for I/O
 		const int activity = select(max_sd + 1, &readfds, nullptr, nullptr, nullptr);
 
 		if ((activity < 0) && (errno != EINTR))
 			fprintf(stderr, "A non-fatal selector error occurred!\n");
 
+		// There is activity on the socket
+		// -- accept the connection and add it
+		// to a free client socked.
 		if (FD_ISSET(master_socket, &readfds))
 		{
 			if ((new_socket = accept(master_socket, 
@@ -312,12 +337,16 @@ int parking_server::open(int begin, int end)
 			}
 		}
 
+		// Loop through all clients and act on those
+		// who are connected (i.e FD is set)
 		for (int i = 0; i < max_clients; i++)
 		{
 			sd = client_sockets[i];
 
 			if (FD_ISSET(sd, &readfds))
 			{
+				// A return value of zero indicates EOS,
+				// so we can disconnect the client.
 				if ((valread = read(sd, _data, buffer_size)) == 0)
 				{
 					getpeername(sd, 
@@ -332,6 +361,9 @@ int parking_server::open(int begin, int end)
 				}
 				else if (valread > -1)
 				{
+
+					// Read the message head and decide what to do
+					// with the rest of the message.
 					msg_head head {};
 					memcpy(&head, _data, valread);
 
@@ -339,6 +371,9 @@ int parking_server::open(int begin, int end)
 					{
 						case msg_type::dock_query:
 						{
+
+							// A client wants to know if there are any free
+							// landing pads!
 
 							size_t msg_bytes = sizeof(dock_query_msg);
 							size_t rsp_bytes = sizeof(dock_query_response_msg);
@@ -361,6 +396,9 @@ int parking_server::open(int begin, int end)
 						}
 						case msg_type::dock_request:
 						{
+
+							// A client wants to register a docking ship!
+
 							size_t msg_bytes = sizeof(dock_change_request_msg);
 							size_t rsp_bytes = sizeof(dock_response_msg);
 
@@ -382,6 +420,9 @@ int parking_server::open(int begin, int end)
 						}
 						case msg_type::undock_request:
 						{
+
+							// A client wants to register an undocking ship!
+
 							size_t msg_bytes = sizeof(dock_change_request_msg);
 							size_t rsp_bytes = sizeof(undock_response_msg);
 
@@ -410,5 +451,7 @@ int parking_server::open(int begin, int end)
 			}
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 
