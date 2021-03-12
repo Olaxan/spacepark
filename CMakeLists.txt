@@ -32,5 +32,8 @@ SOURCE_GROUP("spacepark_config" FILES ${config_files})
 ADD_EXECUTABLE(spacepark-server ${server_files})
 ADD_EXECUTABLE(spacepark-config ${config_files})
 
+ADD_DEPENDENCIES(spacepark-server exts)
+ADD_DEPENDENCIES(spacepark-config exts)
+
 TARGET_LINK_LIBRARIES(spacepark-server PUBLIC exts config++ sqlite3)
 TARGET_LINK_LIBRARIES(spacepark-config PUBLIC exts config++ sqlite3)
