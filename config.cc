@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
 			int errc = 0;
 			if (init_terminals(db, err))
 			{
-				fprintf(stderr, "Faied to init terminals table - %s\n", err);
+				fprintf(stderr, "Failed to init terminals table - %s\n", err);
 				sqlite3_free(err);
 				errc++;
 			}
