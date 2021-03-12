@@ -1,3 +1,6 @@
 [submodule "exts/sqlite-amalgamation"]
 	path = exts/sqlite-amalgamation
 	url = https://github.com/azadkuh/sqlite-amalgamation
+[submodule "exts/libconfig"]
+	path = exts/libconfig
+	url = https://github.com/hyperrealm/libconfig
